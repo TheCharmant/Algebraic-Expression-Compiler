@@ -16,6 +16,22 @@ operator_map = {
     ast.RShift: '>>'
 }
 
+def ast_to_dict(node):
+    if isinstance(node, ast.AST):
+        result = {'type': node.__class__.__name__}
+        for field in node._fields:
+            value = getattr(node, field)
+            if isinstance(value, ast.AST):
+                result[field] = ast_to_dict(value)
+            elif isinstance(value, list):
+                result[field] = [ast_to_dict(item) if isinstance(item, ast.AST) else item for item in value]
+            else:
+                result[field] = value
+        return result
+    else:
+        return node
+
+
 def compile_expression(code):
     try:
         tree = ast.parse(code)
@@ -27,7 +43,6 @@ def compile_expression(code):
                 left = eval_expr(node.left)
                 right = eval_expr(node.right)
 
-                # If left or right is a raw constant, create a temporary
                 if isinstance(left, (int, float)):
                     tmp_left = f"t{len(tac)}"
                     tac.append(f"{tmp_left} = {left}")
@@ -60,7 +75,7 @@ def compile_expression(code):
 
         # Optimization: Constant folding and propagation
         optimized_tac = []
-        symbol_table = {}  # Tracks variable values
+        symbol_table = {}
 
         for line in tac:
             if '=' in line:
@@ -68,19 +83,15 @@ def compile_expression(code):
                 var = parts[0].strip()
                 expr = parts[1].strip()
 
-                # Replace known variables in the expression
                 replaced_expr = expr
                 for key in sorted(symbol_table.keys(), key=lambda x: -len(x)):
                     if key in replaced_expr:
                         replaced_expr = replaced_expr.replace(key, str(symbol_table[key]))
 
-                # Try to evaluate the replaced expression
                 try:
                     value = eval(replaced_expr)
                     symbol_table[var] = value
-                    # Skip adding this line since it's a constant now
                 except:
-                    # If evaluation fails, check for identity simplifications
                     if ' + 0' in replaced_expr:
                         replaced_expr = replaced_expr.replace(' + 0', '')
                     elif ' * 1' in replaced_expr:
@@ -89,19 +100,46 @@ def compile_expression(code):
             else:
                 optimized_tac.append(line)
 
-        # Check if the target variable (x) was optimized to a constant
         final_result = symbol_table.get('x', None)
         if final_result is not None:
             optimized_tac = [f"x = {final_result}"]
         else:
-            # Fallback to original TAC if optimization didn't find a result
             optimized_tac = tac.copy()
+
+        # Build the AST for the first expression
+        ast_tree = build_expr_tree(tree.body[0].value) if isinstance(tree.body[0], ast.Assign) else {}
 
         return {
             "tac": tac,
             "optimized_tac": optimized_tac,
             "final_result": final_result,
-            "ast": ast.dump(tree, indent=4)
+            "ast": ast_tree  # Make sure this is the right structure
         }
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e)} 
+
+def build_expr_tree(node):
+    # Handle the BinOp, Constant, and Name nodes
+    if isinstance(node, ast.BinOp):
+        return {
+            "value": operator_map.get(type(node.op), '?'),
+            "children": [
+                build_expr_tree(node.left),
+                build_expr_tree(node.right)
+            ]
+        }
+    elif isinstance(node, ast.Constant):
+        return {
+            "value": str(node.value),
+            "children": []
+        }
+    elif isinstance(node, ast.Name):
+        return {
+            "value": node.id,
+            "children": []
+        }
+    else:
+        return {
+            "value": "?",
+            "children": []
+        }
