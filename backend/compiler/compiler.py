@@ -1,5 +1,7 @@
 import ast
 import operator
+import re
+import random
 
 # Operator mapping for Binary Operations
 operator_map = {
@@ -15,6 +17,26 @@ operator_map = {
     ast.LShift: '<<',
     ast.RShift: '>>'
 }
+
+def preprocess_expression(code):
+    """Preprocess the expression to handle implicit multiplication and exponents."""
+    # Handle superscript ² (convert to **2)
+    code = code.replace('²', '**2')
+    
+    # Handle exponents with ^ notation (convert to **)
+    code = re.sub(r'(\w+)\^(\d+)', r'\1**\2', code)
+    
+    # Handle implicit multiplication (e.g., 3x -> 3*x)
+    code = re.sub(r'(\d+)([a-zA-Z])', r'\1*\2', code)
+    
+    # Handle parenthesized expressions like (x+3)(x-2) -> (x+3)*(x-2)
+    code = re.sub(r'\)(\()', r')*(', code)
+    
+    # If the expression doesn't have an assignment, add x = to the beginning
+    if '=' not in code:
+        code = f"x = {code}"
+        
+    return code
 
 def ast_to_dict(node):
     if isinstance(node, ast.AST):
@@ -34,7 +56,10 @@ def ast_to_dict(node):
 
 def compile_expression(code):
     try:
-        tree = ast.parse(code)
+        # Preprocess the expression
+        processed_code = preprocess_expression(code)
+        
+        tree = ast.parse(processed_code)
         tac = []
         constants = {}
 
@@ -61,6 +86,18 @@ def compile_expression(code):
                 return node.value
             elif isinstance(node, ast.Name):
                 return node.id
+            elif isinstance(node, ast.UnaryOp):
+                operand = eval_expr(node.operand)
+                if isinstance(node.op, ast.USub):
+                    if isinstance(operand, (int, float)):
+                        return -operand
+                    tmp = f"t{len(tac)}"
+                    tac.append(f"{tmp} = -{operand}")
+                    return tmp
+                elif isinstance(node.op, ast.UAdd):
+                    return operand
+                else:
+                    return "?"
             else:
                 return "?"
 
@@ -89,8 +126,12 @@ def compile_expression(code):
                         replaced_expr = replaced_expr.replace(key, str(symbol_table[key]))
 
                 try:
-                    value = eval(replaced_expr)
-                    symbol_table[var] = value
+                    # Only evaluate if all variables are numbers
+                    if not any(c.isalpha() for c in replaced_expr if c not in ('e', 'j')):
+                        value = eval(replaced_expr)
+                        symbol_table[var] = value
+                    else:
+                        raise Exception("Contains variables")
                 except:
                     if ' + 0' in replaced_expr:
                         replaced_expr = replaced_expr.replace(' + 0', '')
@@ -100,23 +141,18 @@ def compile_expression(code):
             else:
                 optimized_tac.append(line)
 
-        final_result = symbol_table.get('x', None)
-        if final_result is not None:
-            optimized_tac = [f"x = {final_result}"]
-        else:
-            optimized_tac = tac.copy()
-
         # Build the AST for the first expression
         ast_tree = build_expr_tree(tree.body[0].value) if isinstance(tree.body[0], ast.Assign) else {}
 
         return {
             "tac": tac,
             "optimized_tac": optimized_tac,
-            "final_result": final_result,
-            "ast": ast_tree  # Make sure this is the right structure
+            "original_expr": code,
+            "processed_expr": processed_code,
+            "ast": ast_tree
         }
     except Exception as e:
-        return {"error": str(e)} 
+        return {"error": str(e), "original_expr": code}
 
 def build_expr_tree(node):
     # Handle the BinOp, Constant, and Name nodes
@@ -143,3 +179,58 @@ def build_expr_tree(node):
             "value": "?",
             "children": []
         }
+
+# Add this new function to generate random expressions
+def generate_random_expression():
+    """Generate a random algebraic expression for testing."""
+    expression_types = [
+        "simple", "quadratic", "linear_multi_var", "factored", "fraction"
+    ]
+    expr_type = random.choice(expression_types)
+    
+    variables = ['x', 'y', 'z', 'a', 'b']
+    
+    if expr_type == "simple":
+        # Simple expressions like 3x + 5
+        var = random.choice(variables[:3])
+        a = random.randint(1, 10)
+        b = random.randint(1, 10)
+        op = random.choice(['+', '-'])
+        return f"{a}{var} {op} {b}"
+    
+    elif expr_type == "quadratic":
+        # Quadratic expressions like x² + 5x - 6
+        var = random.choice(variables[:2])
+        a = random.randint(1, 5)
+        b = random.randint(-10, 10)
+        c = random.randint(-10, 10)
+        if a == 1:
+            return f"{var}² {'+' if b >= 0 else ''} {b}{var} {'+' if c >= 0 else ''} {c}"
+        else:
+            return f"{a}{var}² {'+' if b >= 0 else ''} {b}{var} {'+' if c >= 0 else ''} {c}"
+    
+    elif expr_type == "linear_multi_var":
+        # Multi-variable expressions like 4a - 7b + 2
+        var1, var2 = random.sample(variables, 2)
+        a = random.randint(1, 10)
+        b = random.randint(1, 10)
+        c = random.randint(0, 10)
+        return f"{a}{var1} - {b}{var2} {'+' if c > 0 else ''} {c if c > 0 else ''}"
+    
+    elif expr_type == "factored":
+        # Factored expressions like (x + 3)(x - 2)
+        var = random.choice(variables[:2])
+        a = random.randint(-5, 5)
+        b = random.randint(-5, 5)
+        return f"({var} {'+' if a >= 0 else ''} {a})({var} {'+' if b >= 0 else ''} {b})"
+    
+    elif expr_type == "fraction":
+        # Fractions like (3x/2) + (7y/4)
+        var1, var2 = random.sample(variables[:3], 2)
+        a = random.randint(1, 10)
+        b = random.randint(2, 6)
+        c = random.randint(1, 10)
+        d = random.randint(2, 6)
+        return f"({a}{var1}/{b}) + ({c}{var2}/{d})"
+    
+    return "x + 1"  # Default fallback

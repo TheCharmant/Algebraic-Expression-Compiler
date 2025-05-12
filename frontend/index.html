@@ -14,12 +14,16 @@
     }
 
     :root {
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
-      --background: #f8fafc;
+      --primary: #6d28d9;
+      --primary-hover: #5b21b6;
+      --background: #f5f5f7;
       --surface: #ffffff;
-      --text: #1e293b;
-      --border: #e2e8f0;
+      --text: #1f2937;
+      --border: #e5e7eb;
+      --accent: #8b5cf6;
+      --accent-light: #ede9fe;
+      --success: #10b981;
+      --error: #ef4444;
       --border-radius: 0.75rem;
       --transition: all 0.3s ease;
     }
@@ -27,52 +31,57 @@
     body {
       background: var(--background);
       color: var(--text);
-      min-height: 100vh;
-      padding: 2rem 1rem;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
       font-size: 1rem;
+      overflow: hidden;
+      padding: 1rem;
     }
 
     .container {
       width: 100%;
-      max-width: 800px;
+      height: 95vh;
+      max-width: 1400px;
       background: var(--surface);
       border-radius: var(--border-radius);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 0.8fr 2.2fr;
+      grid-template-rows: auto 1fr;
+      gap: 1.5rem;
       border: 1px solid var(--border);
     }
 
-    .ast-label {
-      font-weight: 600;
-      font-size: 1rem;
-      color: var(--text);
-      margin-bottom: 0.5rem;
-      padding-left: 0.5rem;
-      border-left: 3px solid var(--primary);
-      padding-top: 2rem; /* Added top padding here */
+    .header {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
     }
-    
-    #ast {
-      height: 800px; /* Adjusted height */
-      padding-top: 1rem; /* Added padding top to the SVG container */
-    }
-    
 
     h1 {
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 700;
       color: var(--text);
-      text-align: center;
-      margin-bottom: 1rem;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    .input-section {
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      height: 100%;
+    }
+
+    .input-panel {
       display: flex;
       flex-direction: column;
       gap: 1rem;
@@ -80,11 +89,11 @@
 
     textarea {
       width: 100%;
-      min-height: 120px;
+      height: 120px;
       padding: 1rem;
       border: 2px solid var(--border);
       border-radius: var(--border-radius);
-      resize: vertical;
+      resize: none;
       font-family: 'Fira Code', monospace;
       background: var(--surface);
       color: var(--text);
@@ -95,12 +104,16 @@
     textarea:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.1);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.75rem;
     }
 
     button {
-      align-self: flex-start;
-      padding: 0.75rem 1.5rem;
+      padding: 0.75rem 1.25rem;
       background: var(--primary);
       color: white;
       border: none;
@@ -112,7 +125,7 @@
       justify-content: center;
       gap: 0.5rem;
       transition: var(--transition);
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
 
     button:hover {
@@ -121,26 +134,72 @@
     }
 
     button svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
     }
 
-    .output-section {
+    button.secondary {
+      background: var(--accent-light);
+      color: var(--primary);
+    }
+    
+    button.secondary:hover {
+      background: #ddd6fe;
+    }
+
+    .explanation-box {
+      flex: 1;
+      background: var(--surface);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      position: relative;
+      overflow: auto;
+    }
+
+    .explanation-box::before {
+      content: "Explanation";
+      display: block;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      padding-left: 0.5rem;
+      border-left: 3px solid var(--accent);
+    }
+
+    .output-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .output-column {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1rem;
+      height: 100%;
     }
 
     .output-box {
       background: var(--surface);
-      padding: 1.5rem;
+      padding: 1rem;
       border-radius: var(--border-radius);
       border: 1px solid var(--border);
       font-family: 'Fira Code', monospace;
-      font-size: 1rem;
+      font-size: 0.9rem;
       white-space: pre-wrap;
       word-break: break-word;
       position: relative;
+      overflow: auto;
+      height: 100%;
     }
 
     .output-box::before {
@@ -148,37 +207,57 @@
       display: block;
       font-family: 'Inter', sans-serif;
       font-weight: 600;
-      font-size: 0.875rem;
-      color: #64748b;
+      font-size: 0.8rem;
+      color: var(--primary);
       margin-bottom: 0.5rem;
       padding-left: 0.5rem;
-      border-left: 3px solid var(--primary);
+      border-left: 3px solid var(--accent);
     }
 
     #ast {
-      min-height: 700px; /* Increased height for AST box */
-      background: #e0e7ff;
-      border-radius: var(--border-radius);
+      background: var(--accent-light);
+      border-radius: calc(var(--border-radius) - 4px);
+      width: 100%;
+      height: calc(100% - 1.5rem);
+      overflow: visible;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .output-box[data-title="Abstract Syntax Tree (AST)"] {
+      overflow: visible;
+      padding: 0.5rem 1rem 0.5rem 1rem;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 1024px) {
       .container {
-        padding: 1.5rem;
-        border-radius: 0.75rem;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+        height: 98vh;
       }
       
-      h1 {
-        font-size: 1.5rem;
+      .output-panel {
+        grid-template-rows: repeat(2, minmax(200px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .output-row {
+        grid-template-columns: 1fr;
       }
       
-      .output-box {
-        font-size: 0.875rem;
+      .output-panel {
+        grid-template-rows: repeat(3, minmax(150px, 1fr));
+      }
+      
+      .button-group {
+        flex-direction: row;
+        flex-wrap: wrap;
       }
       
       button {
-        width: 100%;
-        padding: 1rem;
-        font-size: 1.125rem;
+        flex: 1;
+        min-width: 120px;
       }
     }
   </style>
@@ -186,24 +265,50 @@
 </head>
 <body>
   <div class="container">
-    <h1>Algebraic Expression Compiler</h1>
+    <div class="header">
+      <h1>Algebraic Expression Compiler</h1>
+    </div>
     
-    <div class="input-section">
-      <textarea id="input" placeholder="Enter your expression (e.g., x = 2 + 3 * (4 - 1))"></textarea>
-      <button onclick="compileExpr()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2v20M2 12l10-10 10 10"/>
-        </svg>
-        Compile
-      </button>
+    <div class="left-panel">
+      <div class="input-panel">
+        <textarea id="input" placeholder="Enter your expression (e.g., x = 2 + 3 * (4 - 1))"></textarea>
+        <div class="button-group">
+          <button onclick="compileExpr()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+            Compile
+          </button>
+          <button onclick="randomizeExpr()" class="secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
+            </svg>
+            Randomize
+          </button>
+        </div>
+      </div>
+      
+      <div class="explanation-box" id="explanation">
+        This compiler converts algebraic expressions into Three Address Code (TAC) and optimizes it.
+        
+        Try entering an expression like:
+        • 2 + 3x
+        • x² + 5x - 6
+        • (x + 3)(x - 2)
+        • (3x/2) + (7y/4) - z
+        
+        Or click "Randomize" to generate a random expression.
+      </div>
     </div>
 
-    <div class="output-section">
-      <div class="output-box" data-title="AST">
-        <svg id="ast" width="100%" height="600"></svg>
-      </div>      
-      <pre class="output-box" id="tac" data-title="Three Address Code (TAC)">Waiting for input...</pre>
-      <pre class="output-box" id="opt_tac" data-title="Optimized TAC">Waiting for input...</pre>
+    <div class="output-panel">
+      <div class="output-box" data-title="Abstract Syntax Tree (AST)">
+        <svg id="ast" width="100%" height="100%"></svg>
+      </div>
+      <div class="output-column">
+        <div class="output-box" id="tac" data-title="Three Address Code (TAC)">Waiting for input...</div>
+        <div class="output-box" id="opt_tac" data-title="Optimized TAC">Waiting for input...</div>
+      </div>
     </div>
   </div>
 
