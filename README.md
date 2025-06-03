@@ -1,5 +1,5 @@
 # Algebraic Expression Compiler
 
-This project implements an algebraic expression compiler featuring a minimalist frontend developed using vanilla HTML, CSS, and JavaScript, coupled with a Python backend responsible for parsing and compiling algebraic expressions.
+This project presents an algebraic expression compiler with a minimalist frontend built using vanilla HTML, CSS, and JavaScript, integrated with a Python backend that handles the parsing and compilation of algebraic expressions.
 
 ![image](https://github.com/user-attachments/assets/2aea7c51-66aa-4e59-9ad8-dca0670c015c)
