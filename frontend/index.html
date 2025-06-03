@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Algebraic Compiler</title>
   <style>
+    /* Reset & font */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, sans-serif;
     }
 
     :root {
@@ -22,28 +24,125 @@
       --border: #e5e7eb;
       --accent: #8b5cf6;
       --accent-light: #ede9fe;
-      --success: #10b981;
-      --error: #ef4444;
       --border-radius: 0.75rem;
       --transition: all 0.3s ease;
     }
 
-    body {
+    body, html {
+      height: 100%;
       background: var(--background);
       color: var(--text);
-      height: 100vh;
       display: flex;
-      justify-content: center;
-      align-items: center;
       font-size: 1rem;
       overflow: hidden;
-      padding: 1rem;
     }
 
-    .container {
+    
+
+    /* Wrapper flexbox with sidebar + main */
+    .app-wrapper {
+      display: flex;
       width: 100%;
-      height: 95vh;
+      height: 100vh;
       max-width: 1400px;
+      margin: auto;
+      gap: 1rem;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+
+    .history-item-container {
+  display: flex;
+  align-items: center;        /* Vertically center buttons */
+  justify-content: space-between; /* Space between expression and delete */
+  margin-bottom: 8px;
+}
+
+.history-item {
+  flex-grow: 1;               /* Make this button take available space */
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f3f3f3;
+  cursor: pointer;
+  margin-right: 8px;          /* Space before delete button */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.delete-btn {
+  flex-shrink: 0;             /* Prevent shrinking */
+  padding: 4px 8px;
+  font-size: 14px;
+  background-color: #ef4444; /* Red-ish for delete */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  height: 32px;               /* Make height consistent */
+  line-height: 1;
+}
+
+
+    /* Sidebar (history) */
+    .history-panel {
+      width: 280px;
+      background: var(--surface);
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      overflow-y: auto;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .history-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--primary);
+      padding-left: 0.5rem;
+      border-left: 4px solid var(--accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .history-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .history-item {
+      background: var(--accent-light);
+      border: 1px solid var(--accent);
+      color: var(--primary);
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: var(--transition);
+      text-align: left;
+      user-select: none;
+    }
+
+    .history-item:hover {
+      background: #ddd6fe;
+    }
+    
+    .history-item:hover {
+      background: #ddd6fe;
+    }
+
+    /* Main content container */
+    .container {
+      flex-grow: 1;
       background: var(--surface);
       border-radius: var(--border-radius);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -53,6 +152,7 @@
       grid-template-rows: auto 1fr;
       gap: 1.5rem;
       border: 1px solid var(--border);
+      overflow: hidden;
     }
 
     .header {
@@ -142,7 +242,7 @@
       background: var(--accent-light);
       color: var(--primary);
     }
-    
+
     button.secondary:hover {
       background: #ddd6fe;
     }
@@ -223,47 +323,72 @@
       margin-top: 0.5rem;
       margin-bottom: 0.5rem;
     }
-    
+
     .output-box[data-title="Abstract Syntax Tree (AST)"] {
       overflow: visible;
       padding: 0.5rem 1rem 0.5rem 1rem;
     }
 
+    /* Responsive */
     @media (max-width: 1024px) {
+      .app-wrapper {
+        flex-direction: column;
+        max-width: 100%;
+        height: auto;
+      }
+
+      .history-panel {
+        width: 100%;
+        height: 200px;
+        flex-shrink: initial;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-direction: row;
+        gap: 1rem;
+        padding: 0.5rem 1rem;
+      }
+
+      .history-container {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-grow: 1;
+      }
+
+      .history-item {
+        min-width: 140px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
       .container {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto 1fr;
-        height: 98vh;
+        grid-template-rows: auto auto auto;
+        padding: 1rem 0.5rem;
       }
-      
+
       .output-panel {
-        grid-template-rows: repeat(2, minmax(200px, 1fr));
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+        height: auto;
+      }
+
+      .output-box {
+        height: 200px;
       }
     }
 
-    @media (max-width: 768px) {
-      .output-row {
-        grid-template-columns: 1fr;
-      }
-      
-      .output-panel {
-        grid-template-rows: repeat(3, minmax(150px, 1fr));
-      }
-      
-      .button-group {
-        flex-direction: row;
-        flex-wrap: wrap;
-      }
-      
-      button {
-        flex: 1;
-        min-width: 120px;
-      }
-    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
+
+    <div class="app-wrapper">
+    <div class="history-panel">
+  <div class="history-title">History</div>
+  <div id="history" class="history-container"></div>
+</div>
+
   <div class="container">
     <div class="header">
       <h1>Algebraic Expression Compiler</h1>
@@ -310,6 +435,7 @@
         <div class="output-box" id="opt_tac" data-title="Optimized TAC">Waiting for input...</div>
       </div>
     </div>
+  </div>
   </div>
 
   <script src="script.js"></script>

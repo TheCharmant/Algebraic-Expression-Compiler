@@ -1,0 +1,8 @@
+/* Add custom styling for the caret symbol */
+.small-caret {
+  font-size: 0.7em;
+  position: relative;
+  top: -0.5em;
+  margin-left: 0.1em;
+  margin-right: 0.1em;
+}

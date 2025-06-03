@@ -53,5 +53,19 @@ def random_expression():
 def get_history():
     return jsonify({"history": history[-20:]})  # Return latest 20
 
+@app.route('/history/<int:index>', methods=['DELETE'])
+def delete_history_entry(index):
+    if 0 <= index < len(history):
+        deleted = history.pop(index)
+        save_history()
+        return jsonify({"message": "Deleted", "deleted": deleted})
+    return jsonify({"error": "Index out of range"}), 400
+
+@app.route('/history', methods=['DELETE'])
+def clear_history():
+    history.clear()
+    save_history()
+    return jsonify({"message": "History cleared"})
+
 if __name__ == '__main__':
     app.run(debug=True)

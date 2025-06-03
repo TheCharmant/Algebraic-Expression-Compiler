@@ -45,6 +45,7 @@ async function compileExpr() {
   } else {
     document.getElementById("opt_tac").innerText = "No Optimized TAC.";
   }
+    loadHistory();
 }
 
 function renderASTTree(astData) {
@@ -129,6 +130,87 @@ async function randomizeExpr() {
     }
   } catch (error) {
     console.error("Error fetching random expression:", error);
+  }
+    loadHistory();
+}
+
+async function loadHistory() {
+  try {
+    const res = await fetch('/history');
+    const data = await res.json();
+
+    const historyDiv = document.getElementById("history");
+    historyDiv.innerHTML = "";
+
+    if (data.history && data.history.length > 0) {
+      data.history.slice().reverse().forEach((expr, i) => {
+        const container = document.createElement("div");
+        container.className = "history-item-container";
+
+        const btn = document.createElement("button");
+        btn.textContent = expr;
+        btn.className = "history-item";
+        btn.onclick = () => {
+          document.getElementById("input").value = expr;
+          compileExpr();
+        };
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "✖";
+        delBtn.className = "delete-btn";
+        delBtn.title = "Delete this expression";
+        delBtn.onclick = async () => {
+  const originalIndex = data.history.length - 1 - i;
+  await deleteHistory(originalIndex);
+};
+
+        container.appendChild(btn);
+        container.appendChild(delBtn);
+        historyDiv.appendChild(container);
+      });
+
+      // Add a "Clear All" button at the bottom
+      const clearBtn = document.createElement("button");
+      clearBtn.textContent = "Clear All History";
+      clearBtn.className = "clear-history";
+      clearBtn.onclick = clearAllHistory;
+      historyDiv.appendChild(clearBtn);
+
+    } else {
+      historyDiv.innerHTML = "<p>No history yet.</p>";
+    }
+  } catch (error) {
+    console.error("Failed to load history:", error);
+  }
+}
+
+async function deleteHistory(index) {
+  try {
+    const res = await fetch(`/history/${index}`, { method: 'DELETE' });
+    if (res.ok) {
+      loadHistory(); // Refresh after deletion
+    } else {
+      const err = await res.json();
+      alert(`Failed to delete: ${err.error}`);
+    }
+  } catch (err) {
+    console.error("Error deleting history item:", err);
+  }
+}
+
+async function clearAllHistory() {
+  if (!confirm("Are you sure you want to delete all history?")) return;
+
+  try {
+    const res = await fetch('/history', { method: 'DELETE' });
+    if (res.ok) {
+      loadHistory(); // Refresh after clearing
+    } else {
+      const err = await res.json();
+      alert(`Failed to clear history: ${err.error}`);
+    }
+  } catch (err) {
+    console.error("Error clearing history:", err);
   }
 }
 
