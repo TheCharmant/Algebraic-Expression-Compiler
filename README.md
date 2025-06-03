@@ -1,8 +1,1 @@
-# main directory:
-python -m venv venv
->> .\venv\Scripts\activate
-
-# backend
-cd backend
-pip install flask
-python app.py
+![image](https://github.com/user-attachments/assets/2aea7c51-66aa-4e59-9ad8-dca0670c015c)
